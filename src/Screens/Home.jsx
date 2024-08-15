@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { FlatList, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, FlatList, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Searchbar } from 'react-native-paper';
 import Header from '../Components/Header';
 import DrawerScreenWrapper from '../Components/DrawerScreenWrapper';
@@ -30,7 +30,7 @@ const Home = () => {
         sectionIndex,
         itemIndex: 0,
         viewOffset: 0,
-        animated: true, // Enable smooth scrolling
+        animated: true,
       });
     }
   };
@@ -67,83 +67,93 @@ const Home = () => {
     </View>
   );
 
-  // const renderSectionList = () => (
-  //   <SectionList
-  //     ref={sectionListRef}
-  //     sections={data.map(cat => ({ title: cat.name, data: cat.items }))}
-  //     keyExtractor={(item, index) => `${item.id}-${index}`}
-  //     renderItem={({ item, section }) => null}
-  //     renderSectionHeader={({ section: { title, data } }) => renderHorizontalList(title, data)}
-  //     onViewableItemsChanged={({ viewableItems }) => {
-  //       if (viewableItems.length > 0) {
-  //         const activeCategory = viewableItems[0].section.title;
-  //         if (activeCategory !== activeMenu) {
-  //           setActiveMenu(activeCategory);
-  //           const index = data.findIndex(cat => cat.name === activeCategory);
-  //           if (flatListRef.current) {
-  //             flatListRef.current.scrollToIndex({
-  //               index,
-  //               animated: true, // Enable smooth scrolling
-  //               viewOffset: Dimension.windowWidth / 4, // Adjust as needed
-  //               viewPosition: 0.5 // Center the item
-  //             });
-  //           }
-  //         }
-  //       }
-  //     }}
-  //     viewabilityConfig={{
-  //       itemVisiblePercentThreshold: 50,
-  //     }}
-  //   />
-  // );
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const translateHeader = scrollY.interpolate({
+    inputRange: [0, 180],
+    outputRange: [0, -180],
+    extrapolate: 'clamp'
+  });
+
+  const translateTitle = scrollY.interpolate({
+    inputRange: [0, 180],
+    outputRange: [0, 120],
+    extrapolate: 'clamp'
+  });
+
+  const opacityTitle = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const translateContent = scrollY.interpolate({
+    inputRange: [0, 300],
+    outputRange: [0, -180],
+    extrapolate: 'clamp',
+  });
+  const searchBarScale = scrollY.interpolate({
+    inputRange: [0, 120],
+    outputRange: [1, 0.75], // Scale down to 75%
+    extrapolate: 'clamp',
+  });
 
   return (
     <DrawerScreenWrapper>
-      <View style={{ flex: 1, backgroundColor: Color.grayColor }}>
+      <Animated.View style={{ backgroundColor: Color.grayColor, height: Dimension.windowHeight*(1.2)}}>
         <Header
           leftIcon={{ component: <Ionicons name='menu' size={32} style={styles.icon} />, onPress: () => navigation.toggleDrawer() }}
           rightIcon={{ component: <AntDesign name='shoppingcart' size={32} style={styles.icon} />, onPress: () => navigation.navigate('Cart') }}
         />
-        <View>
-          <Text style={styles.headerText}>Delicious {"\n"}food for you</Text>
+        <Animated.View style={{ transform: [{ translateY: translateHeader }] }}>
+          <Animated.Text style={[styles.headerText, { opacity: opacityTitle }, { transform: [{ translateY: translateTitle }] }]}>
+            Delicious {"\n"}food for you
+          </Animated.Text>
+        </Animated.View>
+        <Animated.View style={{ flex: 1, transform: [{ translateY: translateContent }] }}>
           <TouchableOpacity activeOpacity={0.9} style={{ elevation: 8 }} onPress={() => navigation.navigate('SearchItems')}>
-            <Searchbar
-              placeholder='Search'
-              style={styles.searchbar}
-              value={searchQuery}
-              editable={false}
-              pointerEvents="none"
-            />
-          </TouchableOpacity>
-        </View>
-        {data.length === 0 ? (
-          <ActivityIndicator animating={true} size='large' color={Color.orangeColor} />
-        ) : (
-          <>
-            <View style={styles.menuContainer}>
-              <FlatList
-                ref={flatListRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={data}
-                keyExtractor={item => item.id}
-                style={{ overflow: 'visible' }}
-                renderItem={({ item }) => {
-                  let isActive = item.name === activeMenu;
-                  return (
-                    <TouchableOpacity
-                      onPress={() => filterByCategory(item.name)}
-                      style={[styles.menuItem, { backgroundColor: isActive ? Color.orangeColor : Color.white }]}
-                    >
-                      <Text style={{ color: isActive ? Color.white : Color.orangeColor, fontFamily: 'SFProDisplay-Medium' }}>
-                        {item.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                }}
+            <Animated.View style={{ transform: [{ scaleX: searchBarScale }], alignSelf: 'center' }}>
+
+              <Searchbar
+                placeholder='Search'
+                style={styles.searchbar}
+                value={searchQuery}
+                editable={false}
+                pointerEvents="none"
               />
-            </View>
-            <SectionList
+            </Animated.View>
+          </TouchableOpacity>
+          <View style={[styles.menuContainer]}>
+            <FlatList
+              ref={flatListRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={data}
+              keyExtractor={item => item.id}
+              style={{ overflow: 'visible' }}
+              renderItem={({ item }) => {
+                let isActive = item.name === activeMenu;
+                return (
+                  <TouchableOpacity
+                    onPress={() => filterByCategory(item.name)}
+                    style={[styles.menuItem, { backgroundColor: isActive ? Color.orangeColor : Color.white }]}
+                  >
+                    <Text style={{ color: isActive ? Color.white : Color.orangeColor, fontFamily: 'SFProDisplay-Medium' }}>
+                      {item.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+          {data.length === 0 ? (
+            <ActivityIndicator animating={true} size='large' color={Color.orangeColor} />
+          ) : (
+            <Animated.SectionList
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true }
+              )}
               ref={sectionListRef}
               sections={data.map(cat => ({ title: cat.name, data: cat.items }))}
               keyExtractor={(item, index) => `${item.id}-${index}`}
@@ -158,9 +168,9 @@ const Home = () => {
                     if (flatListRef.current) {
                       flatListRef.current.scrollToIndex({
                         index,
-                        animated: true, // Enable smooth scrolling
-                        viewOffset: Dimension.windowWidth / 4, // Adjust as needed
-                        viewPosition: 0.5 // Center the item
+                        animated: true,
+                        viewOffset: Dimension.windowWidth / 4,
+                        viewPosition: 0.5
                       });
                     }
                   }
@@ -170,9 +180,9 @@ const Home = () => {
                 itemVisiblePercentThreshold: 50,
               }}
             />
-          </>
-        )}
-      </View>
+          )}
+        </Animated.View>
+      </Animated.View>
     </DrawerScreenWrapper>
   );
 };
@@ -193,6 +203,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: '12%',
     color: "#000",
     marginBottom: 10,
+
   },
   searchbar: {
     width: '80%',
@@ -203,21 +214,26 @@ const styles = StyleSheet.create({
     marginHorizontal: Dimension.windowWidth / 16,
     marginTop: '1%',
     marginBottom: '7%',
+
   },
   menuItem: {
     padding: 6,
     paddingHorizontal: 15,
     borderRadius: 50,
     marginRight: 18,
+
   },
   scrollViewContent: {
     paddingHorizontal: Dimension.windowWidth / 16,
+
   },
   horizontalList: {
     paddingHorizontal: Dimension.windowWidth / 16,
+
   },
   horizontalSection: {
     marginBottom: 20,
+
   },
   icon: {
     color: Color.black,

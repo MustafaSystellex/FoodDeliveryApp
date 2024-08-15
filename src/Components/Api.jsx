@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const baseUrl = 'https://jrqim8am3h.us-east-1.awsapprunner.com/api/v1/restaurant/subway';
+// const baseUrl = 'https://jrqim8am3h.us-east-1.awsapprunner.com/api/v1/restaurant/caesars-pizza';
 
 export const getFoodData = async () => {
     try {

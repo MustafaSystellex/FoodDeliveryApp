@@ -12,11 +12,12 @@ import Header from '../Components/Header';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const { width: screenWidth } = Dimensions.get('window');
+const IMAGE_URI = 'https://d1ogk7atdylnrt.cloudfront.net/'
 
 const SwipeableItem = ({ item, index, onDelete }) => {
     const translateX = useSharedValue(0);
-    const itemHeight = useSharedValue(Dimension.windowHeight*0.1);
-    const viewMarginBottom = useSharedValue(Dimension.windowHeight*0.09);
+    const itemHeight = useSharedValue(Dimension.windowHeight * 0.1);
+    const viewMarginBottom = useSharedValue(Dimension.windowHeight * 0.09);
     const opacity = useSharedValue(1);
     const translate_X_threshold = -screenWidth * 0.3;
     const dispatch = useDispatch();
@@ -68,7 +69,7 @@ const SwipeableItem = ({ item, index, onDelete }) => {
             dispatch(updateItemQuantity(item.id, item.quantity - 1));
         }
     };
-
+    console.log("ssdfjdshfjsd ", item)
     return (
         <Animated.View style={[styles.swipeableItemContainer, rTaskContainerStyle]}>
             <Animated.View style={[styles.iconContainer, rIconContainerStyle]}>
@@ -77,11 +78,11 @@ const SwipeableItem = ({ item, index, onDelete }) => {
             <PanGestureHandler onGestureEvent={panGesture}>
                 <Animated.View style={[styles.item, rStyle]}>
                     <View style={styles.imageContainer}>
-                        <Image source={item.img} style={styles.itemImage} />
+                        <Image source={{ uri: IMAGE_URI + item.img }} style={styles.itemImage} />
                     </View>
                     <View style={styles.itemDetails}>
                         <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemPrice}>{item.price}</Text>
+                        <Text style={styles.itemPrice}>{`Rs. ${item.price}`}</Text>
                     </View>
                     <View style={styles.itemActions}>
                         <TouchableOpacity onPress={handleDecrement}>
@@ -100,7 +101,6 @@ const SwipeableItem = ({ item, index, onDelete }) => {
 
 const Cart = ({ navigation }) => {
     const itemsCart = useSelector(state => state.addItemToCart);
-    console.log('items, ', itemsCart)
     const dispatch = useDispatch();
 
     const removeItem = (index) => {
@@ -113,13 +113,13 @@ const Cart = ({ navigation }) => {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-                <Header 
+            <Header
                 leftIcon={{
                     component: <MaterialIcons name="keyboard-arrow-left" size={33} color={Color.black} />,
                     onPress: () => navigation.goBack()
                 }}
                 title={"Cart"}
-                />
+            />
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Image source={swipeIcon} style={styles.swipeIcon} />
@@ -127,6 +127,7 @@ const Cart = ({ navigation }) => {
                 </View>
                 <FlatList
                     data={itemsCart}
+                    showsVerticalScrollIndicator={false}
                     renderItem={({ item, index }) => (
                         <SwipeableItem item={item} index={index} onDelete={handleDeleteItem} />
                     )}
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: '5%',
-        paddingTop: Dimension.windowHeight*0.02,
+        paddingTop: Dimension.windowHeight * 0.02,
     },
     header: {
         flexDirection: 'row',
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 'auto',
         display: 'flex',
         justifyContent: 'center',
-        paddingTop: Dimension.windowHeight*0.06,
+        paddingTop: Dimension.windowHeight * 0.06,
         elevation: 5
     },
     iconContainer: {
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
-        height: Dimension.windowHeight/6,
+        height: Dimension.windowHeight / 6,
         width: '100%',
         overflow: 'hidden',
         paddingRight: 7,
@@ -218,10 +219,12 @@ const styles = StyleSheet.create({
     imageContainer: {
         alignItems: 'center',
         justifyContent: 'center',
+        paddingLeft: 5
     },
     itemImage: {
         width: 110,
-        height: Dimension.windowHeight*0.09,
+        height: 110,
+        borderRadius: 55,
     },
     itemDetails: {
         flex: 1,
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
         color: Color.black,
         fontFamily: 'SFProDisplay-Bold',
         fontSize: 18,
-        marginBottom: Dimension.windowHeight*0.01
+        marginBottom: Dimension.windowHeight * 0.01
     },
     itemPrice: {
         color: Color.orangeColor,
@@ -241,11 +244,11 @@ const styles = StyleSheet.create({
     itemActions: {
         backgroundColor: Color.orangeColor,
         flexDirection: 'row',
-        gap: Dimension.windowWidth*0.04,
+        gap: Dimension.windowWidth * 0.04,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: Dimension.windowWidth*0.03,
-        paddingVertical: Dimension.windowHeight*0.005,
+        paddingHorizontal: Dimension.windowWidth * 0.03,
+        paddingVertical: Dimension.windowHeight * 0.005,
         borderRadius: 15,
         position: 'absolute',
         bottom: 15,

@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react'
 import Color from '../Constants/Color'
 const { width, height } = Dimensions.get('window');
 
-const IMAGE_URI='https://d1ogk7atdylnrt.cloudfront.net/'
+const IMAGE_URI = 'https://d1ogk7atdylnrt.cloudfront.net/'
 
-const MenuItemCards = ({data , navigation, parentHeight = height * 0.3, parentWidth = width * 0.45, imageHeight = height * 0.2, imageWidth = width * 0.5 }) => {
+const MenuItemCards = ({ data, navigation, parentHeight = height * 0.3, parentWidth = width * 0.45, imageHeight = height * 0.2, imageWidth = width * 0.5 }) => {
   // console.log("Data444444444",data.items.name)
   return (
     <TouchableOpacity
@@ -15,20 +15,18 @@ const MenuItemCards = ({data , navigation, parentHeight = height * 0.3, parentWi
     >
       <View style={[styles.parent, { height: parentHeight, width: parentWidth }]}>
         <View style={styles.textContainer}>
-              <Text style={styles.itemName}>{data.name}</Text>
-                {
-                  data.item_variations.map((item ,index)=> (
-
-                    <Text key={index} style={styles.price}>{`Rs. ${item.price}`}</Text> 
-                  ))
-                }            
+          <Text style={styles.itemName}>{data.name}</Text>
+          {
+            data.item_variations.length > 0 && (
+              <Text style={styles.price}>{`Rs. ${data.item_variations[0].price}`}</Text>
+            )}
         </View>
       </View>
       <View style={styles.absoluteImage}>
         <Image
-          resizeMode='contain'
-          source={data.photo}
-          style={[styles.imageShadow, { height: imageHeight, width: imageWidth }]}
+          resizeMode='cover'
+          source={{ uri: IMAGE_URI + data.photo }}
+          style={[styles.imageShadow, { height: 130, width: 130 }]}
         />
       </View>
     </TouchableOpacity>
@@ -43,7 +41,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#393939'
+    shadowColor: '#393939',
   },
   parent: {
     marginVertical: height * 0.02,
@@ -79,8 +77,8 @@ const styles = StyleSheet.create({
   },
   absoluteImage: {
     position: 'absolute',
-    top: -height * 0.03,
-    left: '45%',
+    top: -height * 0.01,
+    left: '60%',
     zIndex: 1,
     transform: [{ translateX: -width * 0.25 }],
     paddingTop: '5%',

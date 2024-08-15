@@ -8,6 +8,7 @@ export const Reducers = (state = initialState, { payload, type }) => {
     switch (type) {
         case ADD_ITEM: {
             const itemIndex = state.addItemToCart.findIndex(item => item.id === payload.id);
+            console.log("itemIndex", payload)
             if (itemIndex !== -1) {
                 const updatedState = state.addItemToCart.map((item, index) => 
                     index === itemIndex ? { ...item, quantity: item.quantity + 1 } : item

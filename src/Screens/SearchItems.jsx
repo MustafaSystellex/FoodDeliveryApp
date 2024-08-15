@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
-import { Searchbar } from 'react-native-paper';
+import { ActivityIndicator, Searchbar } from 'react-native-paper';
 import MenuItemCards from '../Components/MenuItemCards';
 import Color from '../Constants/Color';
 import Feather from 'react-native-vector-icons/Feather';
@@ -9,12 +9,12 @@ import { useNavigation } from '@react-navigation/native';
 import { getFoodData } from '../Components/Api';
 import Dimension from '../Constants/Dimension';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 const SearchItems = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [allItems, setAllItems] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,8 +22,9 @@ const SearchItems = ({ navigation }) => {
         const result = await getFoodData();
         const restaurant = result.restaurant;
         const categoriesData = restaurant.menu.categories;
-        setCategories(categoriesData);
-        setFilteredItems(categoriesData);  // Initially show all categories
+        const flattenedItems = categoriesData.flatMap(category => category.items);
+        setAllItems(flattenedItems); // Save all items
+        setFilteredItems(flattenedItems); // Initially show all items
       } catch (error) {
         console.error("Error in items ", error);
       }
@@ -34,13 +35,10 @@ const SearchItems = ({ navigation }) => {
   const onChangeSearch = query => {
     setSearchQuery(query);
     if (query) {
-      const filtered = categories.map(category => ({
-        ...category,
-        items: category.items.filter(item => item.name.toLowerCase().includes(query.toLowerCase()))
-      })).filter(category => category.items.length > 0);
+      const filtered = allItems.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
       setFilteredItems(filtered);
     } else {
-      setFilteredItems(categories);
+      setFilteredItems(allItems);
     }
   };
 
@@ -68,31 +66,41 @@ const SearchItems = ({ navigation }) => {
       </View>
       {
         filteredItems.length === 0 ? (
-          <View style={styles.noResultsContainer}>
-            <Feather color={Color.iconColor} name="search" size={110} />
-            <Text style={styles.noResultsText}>Item not found</Text>
-            <Text style={styles.noResultsSubText}>Try searching the item with a different keyword.</Text>
-          </View>
+          <ActivityIndicator animating={true} size='large' color={Color.orangeColor} />
         ) : (
-          <>
-            <Text style={styles.resultsCountText}>
-              {`Found ${filteredItems.reduce((acc, cat) => acc + cat.items.length, 0)} Result${filteredItems.reduce((acc, cat) => acc + cat.items.length, 0) > 1 ? 's' : ''}`}
-            </Text>
-            <FlatList
-              data={filteredItems}
-              keyExtractor={item => item.id}
-              renderItem={({ item, index }) => (
-                <View style={[index % 2 !== 0 && styles.secondColumn]}>
-                  {/* <Text style={styles.categoryTitle}>{item.name}</Text> */}
-                  {item.items.map((menuItem, itemIndex) => (
-                    <MenuItemCards key={itemIndex} data={menuItem} navigation={navigation} parentHeight={200} parentWidth={screenWidth * 0.4} />
-                  ))}
+          <View style={styles.resultsWrapper}>
+            {
+              filteredItems.length === 0 ? (
+                <View style={styles.noResultsContainer}>
+                  <Feather color={Color.iconColor} name="search" size={110} />
+                  <Text style={styles.noResultsText}>Item not found</Text>
+                  <Text style={styles.noResultsSubText}>Try searching the item with a different keyword.</Text>
                 </View>
-              )}
-              contentContainerStyle={styles.resultsContainer}
-              numColumns={2}
-            />
-          </>
+              ) : (
+                <>
+                  <Text style={styles.resultsCountText}>
+                    {`Found ${filteredItems.length} Result${filteredItems.length > 1 ? 's' : ''}`}
+                  </Text>
+                  <FlatList
+                    data={filteredItems}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item,index }) => (
+                      <View style={[index % 2 !== 0 && styles.secondColumn]}>
+                      <MenuItemCards
+                        data={item}
+                        navigation={navigation}
+                        parentHeight={200}
+                        parentWidth={screenWidth * 0.4}
+                      />
+                      </View>
+                    )}
+                    contentContainerStyle={styles.resultsContainer}
+                    numColumns={2}
+                  />
+                </>
+              )
+            }
+          </View>
         )
       }
     </View>
@@ -143,17 +151,17 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.06,
     textAlign: 'center',
   },
+  resultsWrapper:{
+    flex:1
+  },
   resultsContainer: {
     paddingHorizontal: Dimension.windowWidth * 0.05,
   },
-  secondColumn: {
-    top: Dimension.windowHeight * 0.05, // Adjust this value as needed
+  cardsItem:{
+    flex:1,
+    margin: 5
   },
-  categoryTitle: {
-    fontFamily: 'SFProDisplay-Bold',
-    fontSize: screenWidth * 0.05,
-    color: Color.black,
-    marginVertical: '5%',
-    textAlign: 'center',
-  },
+  secondColumn:{
+    top: Dimension.windowHeight * 0.05,
+  }
 });

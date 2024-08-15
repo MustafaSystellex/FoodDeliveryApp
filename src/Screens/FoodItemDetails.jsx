@@ -9,6 +9,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Dimension from '../Constants/Dimension';
 
+const IMAGE_URI='https://d1ogk7atdylnrt.cloudfront.net/'
+
 const FoodItemDetails = ({ route, navigation }) => {
     const { item } = route.params;
     const dispatch = useDispatch();
@@ -38,7 +40,7 @@ const FoodItemDetails = ({ route, navigation }) => {
                 }}
             />
             <View style={styles.sliderContainer}>
-                <FoodItemSlider images={images} />
+                <FoodItemSlider images={images.map(img => ({ uri: IMAGE_URI + img }))} />
             </View>
             <View style={styles.detailsContainer}>
                 <Text style={styles.title}>{item.name}</Text>
