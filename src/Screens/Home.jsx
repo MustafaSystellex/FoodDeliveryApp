@@ -20,11 +20,11 @@ const Home = () => {
   const sectionListRef = useRef(null);
   const flatListRef = useRef(null);
 
-  const filterByCategory = category => {
+  const filterByCategory = (category) => {
     setActiveMenu(category);
     setSearchQuery('');
-    setFilteredItems(data.find(cat => cat.name === category)?.items || []);
-    const sectionIndex = data.findIndex(cat => cat.name === category);
+    setFilteredItems(data.find((cat) => cat.name === category)?.items || []);
+    const sectionIndex = data.findIndex((cat) => cat.name === category);
     if (sectionListRef.current && sectionIndex !== -1) {
       sectionListRef.current.scrollToLocation({
         sectionIndex,
@@ -45,7 +45,7 @@ const Home = () => {
         setActiveMenu(categories[0]?.name || '');
         setFilteredItems(categories[0]?.items || []);
       } catch (error) {
-        console.error("Error in items ", error);
+        console.error('Error in items ', error);
       }
     };
     fetchData();
@@ -72,17 +72,17 @@ const Home = () => {
   const translateHeader = scrollY.interpolate({
     inputRange: [0, 180],
     outputRange: [0, -180],
-    extrapolate: 'clamp'
+    extrapolate: 'clamp',
   });
 
   const translateTitle = scrollY.interpolate({
     inputRange: [0, 180],
     outputRange: [0, 120],
-    extrapolate: 'clamp'
+    extrapolate: 'clamp',
   });
 
   const opacityTitle = scrollY.interpolate({
-    inputRange: [0, 50],
+    inputRange: [0, 150],
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
@@ -92,30 +92,42 @@ const Home = () => {
     outputRange: [0, -180],
     extrapolate: 'clamp',
   });
+
   const searchBarScale = scrollY.interpolate({
     inputRange: [0, 120],
-    outputRange: [1, 0.75], // Scale down to 75%
+    outputRange: [1, 0.75],
+    extrapolate: 'clamp',
+  });
+
+  const searchBarScaleY = scrollY.interpolate({
+    inputRange: [0, 120],
+    outputRange: [1, 0.75],
     extrapolate: 'clamp',
   });
 
   return (
     <DrawerScreenWrapper>
-      <Animated.View style={{ backgroundColor: Color.grayColor, height: Dimension.windowHeight*(1.2)}}>
+      <Animated.View style={{ backgroundColor: Color.grayColor, height: Dimension.windowHeight * 1.2 }}>
         <Header
-          leftIcon={{ component: <Ionicons name='menu' size={32} style={styles.icon} />, onPress: () => navigation.toggleDrawer() }}
-          rightIcon={{ component: <AntDesign name='shoppingcart' size={32} style={styles.icon} />, onPress: () => navigation.navigate('Cart') }}
+          leftIcon={{
+            component: <Ionicons name="menu" size={32} style={styles.icon} />,
+            onPress: () => navigation.toggleDrawer(),
+          }}
+          rightIcon={{
+            component: <AntDesign name="shoppingcart" size={32} style={styles.icon} />,
+            onPress: () => navigation.navigate('Cart'),
+          }}
         />
         <Animated.View style={{ transform: [{ translateY: translateHeader }] }}>
           <Animated.Text style={[styles.headerText, { opacity: opacityTitle }, { transform: [{ translateY: translateTitle }] }]}>
-            Delicious {"\n"}food for you
+            Delicious {'\n'}food for you
           </Animated.Text>
         </Animated.View>
         <Animated.View style={{ flex: 1, transform: [{ translateY: translateContent }] }}>
           <TouchableOpacity activeOpacity={0.9} style={{ elevation: 8 }} onPress={() => navigation.navigate('SearchItems')}>
-            <Animated.View style={{ transform: [{ scaleX: searchBarScale }], alignSelf: 'center' }}>
-
+            <Animated.View style={{ transform: [{ scaleX: searchBarScale }, { scaleY: searchBarScaleY }], alignSelf: 'center' }}>
               <Searchbar
-                placeholder='Search'
+                placeholder="Search"
                 style={styles.searchbar}
                 value={searchQuery}
                 editable={false}
@@ -123,16 +135,16 @@ const Home = () => {
               />
             </Animated.View>
           </TouchableOpacity>
-          <View style={[styles.menuContainer]}>
+          <View style={styles.menuContainer}>
             <FlatList
               ref={flatListRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               data={data}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) => `${item.name}-${index}`}
               style={{ overflow: 'visible' }}
               renderItem={({ item }) => {
-                let isActive = item.name === activeMenu;
+                const isActive = item.name === activeMenu;
                 return (
                   <TouchableOpacity
                     onPress={() => filterByCategory(item.name)}
@@ -147,30 +159,27 @@ const Home = () => {
             />
           </View>
           {data.length === 0 ? (
-            <ActivityIndicator animating={true} size='large' color={Color.orangeColor} />
+            <ActivityIndicator animating={true} size="large" color={Color.orangeColor} />
           ) : (
             <Animated.SectionList
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true }
-              )}
+              onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
               ref={sectionListRef}
-              sections={data.map(cat => ({ title: cat.name, data: cat.items }))}
+              sections={data.map((cat) => ({ title: cat.name, data: cat.items }))}
               keyExtractor={(item, index) => `${item.id}-${index}`}
-              renderItem={({ item, section }) => null}
+              renderItem={() => null}
               renderSectionHeader={({ section: { title, data } }) => renderHorizontalList(title, data)}
               onViewableItemsChanged={({ viewableItems }) => {
                 if (viewableItems.length > 0) {
                   const activeCategory = viewableItems[0].section.title;
                   if (activeCategory !== activeMenu) {
                     setActiveMenu(activeCategory);
-                    const index = data.findIndex(cat => cat.name === activeCategory);
-                    if (flatListRef.current) {
+                    const index = data.findIndex((cat) => cat.name === activeCategory);
+                    if (flatListRef.current && index !== -1) {
                       flatListRef.current.scrollToIndex({
                         index,
                         animated: true,
                         viewOffset: Dimension.windowWidth / 4,
-                        viewPosition: 0.5
+                        viewPosition: 0.5,
                       });
                     }
                   }
@@ -194,16 +203,15 @@ const styles = StyleSheet.create({
     fontFamily: 'SFProDisplay-Semibold',
     fontSize: 40,
     paddingHorizontal: '12%',
-    color: "#000",
+    color: '#000',
     marginBottom: 15,
   },
   catText: {
     fontFamily: 'SFProDisplay-Semibold',
     fontSize: 20,
     paddingHorizontal: '12%',
-    color: "#000",
+    color: '#000',
     marginBottom: 10,
-
   },
   searchbar: {
     width: '80%',
@@ -214,26 +222,21 @@ const styles = StyleSheet.create({
     marginHorizontal: Dimension.windowWidth / 16,
     marginTop: '1%',
     marginBottom: '7%',
-
   },
   menuItem: {
     padding: 6,
     paddingHorizontal: 15,
     borderRadius: 50,
     marginRight: 18,
-
   },
   scrollViewContent: {
     paddingHorizontal: Dimension.windowWidth / 16,
-
   },
   horizontalList: {
     paddingHorizontal: Dimension.windowWidth / 16,
-
   },
   horizontalSection: {
     marginBottom: 20,
-
   },
   icon: {
     color: Color.black,

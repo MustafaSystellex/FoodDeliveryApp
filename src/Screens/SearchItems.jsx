@@ -15,6 +15,7 @@ const SearchItems = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,8 +26,10 @@ const SearchItems = ({ navigation }) => {
         const flattenedItems = categoriesData.flatMap(category => category.items);
         setAllItems(flattenedItems); // Save all items
         setFilteredItems(flattenedItems); // Initially show all items
+        setLoading(false); // Data loaded
       } catch (error) {
         console.error("Error in items ", error);
+        setLoading(false); // Stop loading on error
       }
     };
     fetchData();
@@ -65,41 +68,36 @@ const SearchItems = ({ navigation }) => {
         />
       </View>
       {
-        filteredItems.length === 0 ? (
+        loading ? (
           <ActivityIndicator animating={true} size='large' color={Color.orangeColor} />
+        ) : filteredItems.length === 0 ? (
+          <View style={styles.noResultsContainer}>
+            <Feather color={Color.iconColor} name="search" size={110} />
+            <Text style={styles.noResultsText}>Item not found</Text>
+            <Text style={styles.noResultsSubText}>Try searching the item with a different keyword.</Text>
+          </View>
         ) : (
           <View style={styles.resultsWrapper}>
-            {
-              filteredItems.length === 0 ? (
-                <View style={styles.noResultsContainer}>
-                  <Feather color={Color.iconColor} name="search" size={110} />
-                  <Text style={styles.noResultsText}>Item not found</Text>
-                  <Text style={styles.noResultsSubText}>Try searching the item with a different keyword.</Text>
-                </View>
-              ) : (
-                <>
-                  <Text style={styles.resultsCountText}>
-                    {`Found ${filteredItems.length} Result${filteredItems.length > 1 ? 's' : ''}`}
-                  </Text>
-                  <FlatList
-                    data={filteredItems}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item,index }) => (
-                      <View style={[index % 2 !== 0 && styles.secondColumn]}>
-                      <MenuItemCards
-                        data={item}
-                        navigation={navigation}
-                        parentHeight={200}
-                        parentWidth={screenWidth * 0.4}
-                      />
-                      </View>
-                    )}
-                    contentContainerStyle={styles.resultsContainer}
-                    numColumns={2}
+            <Text style={styles.resultsCountText}>
+              {`Found ${filteredItems.length} Result${filteredItems.length > 1 ? 's' : ''}`}
+            </Text>
+            <FlatList
+              data={filteredItems}
+              keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())} // Fallback to index if item.id is undefined
+              renderItem={({ item, index }) => (
+                <View key={item.id || index} style={[index % 2 !== 0 && styles.secondColumn]}>
+                  <MenuItemCards
+                    data={item}
+                    navigation={navigation}
+                    parentHeight={200}
+                    parentWidth={screenWidth * 0.4}
                   />
-                </>
-              )
-            }
+                </View>
+              )}
+              contentContainerStyle={styles.resultsContainer}
+              numColumns={2}
+            />
+
           </View>
         )
       }
@@ -151,17 +149,17 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.06,
     textAlign: 'center',
   },
-  resultsWrapper:{
-    flex:1
+  resultsWrapper: {
+    flex: 1
   },
   resultsContainer: {
     paddingHorizontal: Dimension.windowWidth * 0.05,
   },
-  cardsItem:{
-    flex:1,
+  cardsItem: {
+    flex: 1,
     margin: 5
   },
-  secondColumn:{
+  secondColumn: {
     top: Dimension.windowHeight * 0.05,
   }
 });
